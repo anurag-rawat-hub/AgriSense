@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Result</title>
+</head>
+<body>
+
+<h2>Prediction Result</h2>
+
+<img src="{{ image_url }}" width="200">
+
+<p><b>Crop:</b> {{ result.crop }}</p>
+<p><b>Disease:</b> {{ result.disease }}</p>
+<p><b>Confidence:</b> {{ result.confidence }}</p>
+
+<h3>AI Recommendations 🤖</h3>
+<pre>{{ ai }}</pre>
+
+</body>
+</html>

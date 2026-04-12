@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+<h1>🌱 Smart Farm Dashboard</h1>
+
+<canvas id="tempChart"></canvas>
+<canvas id="humidityChart"></canvas>
+
+<script>
+async function loadData() {
+    const res = await fetch("/get-sensor-data/");
+    const data = await res.json();
+
+    const temps = data.map(d => d.temperature);
+    const times = data.map(d => d.time);
+
+    new Chart(document.getElementById("tempChart"), {
+        type: 'line',
+        data: {
+            labels: times,
+            datasets: [{
+                label: "Temperature",
+                data: temps
+            }]
+        }
+    });
+}
+
+loadData();
+</script>
+
+</body>
+</html>

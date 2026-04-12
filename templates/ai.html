@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Assistant</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #0b0f0c;
+      color: white;
+      padding: 20px;
+    }
+
+    #chat-box {
+      height: 400px;
+      overflow-y: auto;
+      border: 1px solid #00ff88;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .msg {
+      margin: 10px 0;
+    }
+
+    .user {
+      color: #00ff88;
+    }
+
+    .bot {
+      color: #fff;
+    }
+
+    input {
+      width: 80%;
+      padding: 10px;
+    }
+
+    button {
+      padding: 10px;
+      background: #00ff88;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+<div style="display:flex; justify-content:center; margin-top:30px;">
+<h1 style="font-size:30 px;">🌱 AI Farming Assistant</h1>
+</div>
+
+<div id="chat-box"></div>
+
+<input id="user-input" placeholder="Ask about crops..." />
+<button onclick="sendMessage()">Send</button>
+
+<script>
+async function sendMessage() {
+    const input = document.getElementById("user-input");
+    const chatBox = document.getElementById("chat-box");
+
+    const message = input.value;
+    if (!message) return;
+
+    // show user msg
+    chatBox.innerHTML += `<div class="msg user">You: ${message}</div>`;
+    input.value = "";
+
+    // send to backend
+    const res = await fetch("/ask-ai/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ question: message })
+    });
+
+    const data = await res.json();
+
+    chatBox.innerHTML += `<div class="msg bot">AI: ${data.answer}</div>`;
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+</script>
+
+</body>
+</html>

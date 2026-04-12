@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Crop AI</title>
+
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+
+<body>
+<div class="app-container">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="logo">🌿 Crop AI</div>
+    <ul>
+      <li class="active">Scanner</li>
+      <li>History</li>
+    </ul>
+  </nav>
+
+  <!-- Main -->
+  <main class="main-content">
+    <div style="display:flex; justify-content:center; margin-top:30px;">
+
+    <h1 style="font-size:25 px;">Smart Leaf Diagnosis 🌿 </h1>
+
+    </div>
+    <div style="display:flex; justify-content:center; margin-top:30px;">
+    <h2>Holographic prediction engine powered by deep learning.</h2>
+    </div>
+    <br>
+    <br>
+
+    <div class="grid">
+
+        
+      <!-- 3D Canvas -->
+      <div class="card">
+        <div id="canvas-container"></div>
+      </div>
+
+
+      <!-- Controls -->
+      <div class="card">
+
+        <h1>Upload Leaf Image</h1>
+
+        <button id="upload-btn" style="padding:18px 40px;font-size:18px; font-weight:bold;">Upload Image</button>
+        <input type="file" id="file-input" hidden>
+        <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+
+        <p id="status">Idle</p>
+
+        <!-- Results -->
+        <div id="results" style="display:none;">
+          <h2>Disease: <span id="disease"></span></h2>
+          <p>Confidence: <span id="confidence"></span></p>
+          <p>AI Advice:</p>
+          <pre id="ai"></pre>
+        </div>
+
+      </div>
+
+    </div>
+
+    <br>
+    <br>
+    <br>
+
+     <div style="display:flex; justify-content:center; margin-top:30px;">
+      <a href="/ai/">
+        <button style="
+      padding:18px 40px;
+      font-size:25px;
+      background:#00ff88;
+      border:none;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:bold;
+    ">
+      🤖 Ask AI
+        </button>
+        </a>
+      </div>
+
+  </main>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
