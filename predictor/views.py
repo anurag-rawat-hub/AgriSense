@@ -10,16 +10,16 @@ from .ml_model import predict_image
 from .utils import get_ai_recommendation
 
 
-# 🌿 Home Page
+# Landing Page
+def landing(request):
+    return render(request, "landing.html")
+
+# Dashboard (Index) Page
 def index(request):
     return render(request, "index.html")
 
 def get_sensor_data(request):
-    data = SensorData.objects.all().order_by('-created_at')[:10]
-
-def ai_page(request):
-    return render(request, "ai.html")
-
+    data = SensorData.objects.all().order_by('-created_at')[:20]
     result = []
     for d in data:
         result.append({
@@ -32,11 +32,14 @@ def ai_page(request):
 
     return JsonResponse(result, safe=False)
 
+def ai_page(request):
+    return render(request, "ai.html")
+
 
 def dashboard(request):
     return render(request, "dashboard.html")
 
-# 🤖 Prediction API
+#  Prediction API
 @csrf_exempt
 def predict(request):
     if request.method == "POST":
@@ -49,10 +52,10 @@ def predict(request):
         filename = fs.save(image.name, image)
         file_path = fs.path(filename)
 
-        print("📸 Image saved:", file_path)
+        print(" Image saved:", file_path)
 
         try:
-            # 🧠 ML Prediction
+            #  ML Prediction
             result = predict_image(file_path)
 
             if not result:
@@ -65,7 +68,7 @@ def predict(request):
             return JsonResponse({"error": "ML prediction failed"}, status=500)
 
         try:
-            # 🤖 AI Recommendation
+            # AI Recommendation
             ai_output = get_ai_recommendation(
                 result.get("crop", "Unknown"),
                 result.get("disease", "Unknown")
@@ -109,7 +112,7 @@ def sensor_data(request):
 
 @csrf_exempt
 def ask_ai(request):
-    import requests   # 🔥 force import inside function
+    import requests   #  force import inside function
 
     if request.method == "POST":
         data = json.loads(request.body)

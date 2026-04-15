@@ -2,7 +2,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.index),
+    path('', views.landing),
+    path('index/', views.index),
     path('predict/', views.predict),
     path('sensor/', views.sensor_data),
     path('get-sensor-data/', views.get_sensor_data),
