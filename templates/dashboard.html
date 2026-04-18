@@ -6,14 +6,55 @@
   <title>CropAI – Smart Farm Dashboard</title>
   <meta name="description" content="Real-time IoT sensor dashboard for temperature, humidity, air quality and soil moisture monitoring.">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css?v=7">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 200;
+      background: #fff;
+      border: 1px solid #cce5cc;
+      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(39,174,96,0.15);
+    }
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 99;
+    }
+    @media (max-width: 768px) {
+      .sidebar-toggle { display: flex; }
+      .sidebar {
+        position: fixed !important;
+        left: -260px;
+        top: 0;
+        height: 100%;
+        z-index: 150;
+        transition: left 0.28s ease;
+      }
+      .sidebar.open { left: 0 !important; }
+      .sidebar-overlay.open { display: block; }
+      .main-content { padding-left: 0 !important; }
+    }
+  </style>
 </head>
 
 <body>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
 <div class="app-container">
-
-  
 
   <!-- Sidebar -->
   <nav class="sidebar">
@@ -22,9 +63,9 @@
       <span>Crop AI</span>
     </div>
     <ul>
-      <li><a href="/index/">🔬 Scanner</a></li>
-      <li class="active">📊 Dashboard</li>
-      <li><a href="/ai/">🤖 AI Assistant</a></li>
+      <li><a href="/index/"> Scanner</a></li>
+      <li class="active"> Dashboard</li>
+      <li><a href="/ai/"> AI Assistant</a></li>
     </ul>
   </nav>
 
@@ -71,7 +112,7 @@
     <div class="card" style="margin-top:24px;border:1.5px solid var(--border);">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
         <h3 style="margin:0;color:var(--accent-dark);display:flex;align-items:center;gap:10px;font-size:1.1rem;">
-          🤖 AI Disease Assistant
+           AI Disease Assistant
           <span id="ai-status" style="font-size:0.82rem;color:var(--text-muted);font-weight:400;"></span>
         </h3>
         <button onclick="requestManualAIAdvice()" style="background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff;border:none;padding:10px 22px;border-radius:var(--radius-sm);font-weight:600;cursor:pointer;transition:all 0.25s;font-family:'Inter',sans-serif;font-size:0.9rem;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(46,204,113,0.28)'" onmouseout="this.style.transform='';this.style.boxShadow=''">Ask AI for Advice</button>
@@ -204,5 +245,15 @@ loadData();
 setInterval(loadData, 2000);
 </script>
 
+<script>
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+</script>
 </body>
 </html>

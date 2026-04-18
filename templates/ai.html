@@ -35,6 +35,44 @@
       display: flex;
     }
 
+    /* ---- Sidebar toggle ---- */
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 200;
+      background: #fff;
+      border: 1px solid #cce5cc;
+      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(39,174,96,0.15);
+    }
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 99;
+    }
+    @media (max-width: 768px) {
+      .sidebar-toggle { display: flex; }
+      .sidebar {
+        left: -260px;
+        top: 0;
+        height: 100%;
+        z-index: 150;
+        transition: left 0.28s ease;
+      }
+      .sidebar.open { left: 0 !important; }
+      .sidebar-overlay.open { display: block; }
+      .main { min-width: 100vw; }
+    }
+
     /* ---- Leaf decorations ---- */
     .leaf-deco {
       position: fixed;
@@ -361,6 +399,10 @@
 </head>
 
 <body>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
 
   <!-- Leaf decorations -->
   <svg class="leaf-deco tl" viewBox="0 0 200 260" fill="none"><path d="M100 10 C160 30,190 80,180 130 C170 180,130 220,100 250 C70 220,30 180,20 130 C10 80,40 30,100 10Z" fill="#27ae60"/><path d="M100 10 L100 250" stroke="#1e8449" stroke-width="5"/><path d="M100 80 C128 90,148 112,150 134" stroke="#1e8449" stroke-width="3" fill="none"/><path d="M100 130 C74 142,54 162,52 185" stroke="#1e8449" stroke-width="3" fill="none"/></svg>
@@ -373,9 +415,9 @@
       <span>Crop AI</span>
     </div>
     <ul>
-      <li><a href="/index/">🔬 Scanner</a></li>
-      <li><a href="/dashboard/">📊 Dashboard</a></li>
-      <li class="active">🤖 AI Assistant</li>
+      <li><a href="/index/"> Scanner</a></li>
+      <li><a href="/dashboard/"> Dashboard</a></li>
+      <li class="active"> AI Assistant</li>
     </ul>
   </nav>
 
@@ -385,7 +427,7 @@
     <!-- Top bar -->
     <div class="topbar">
       <svg width="28" height="28" viewBox="0 0 200 260" fill="none"><path d="M100 10 C160 30,190 80,180 130 C170 180,130 220,100 250 C70 220,30 180,20 130 C10 80,40 30,100 10Z" fill="#27ae60"/><path d="M100 10 L100 250" stroke="#1e8449" stroke-width="6"/></svg>
-      <h1>🌱 AI Farming Assistant</h1>
+      <h1> AI Farming Assistant</h1>
       <div class="status-dot"></div>
       <span class="caption">Ollama · Local LLM</span>
     </div>
@@ -630,6 +672,8 @@ Be specific, practical, and concise for each section. If you cannot determine th
 // ============================================================
 // Send typed message
 // ============================================================
+let currentChatContext = "";
+
 async function sendMessage() {
   const message = userInput.value.trim();
   if (!message) return;
@@ -640,11 +684,13 @@ async function sendMessage() {
   appendMessage('user', message);
   showTyping();
 
+  const payloadPrompt = currentChatContext ? (currentChatContext + "\n\nUser question: " + message) : message;
+
   try {
     const res = await fetch('/ask-ai/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: message })
+      body: JSON.stringify({ question: payloadPrompt })
     });
     const data = await res.json();
     hideTyping();
@@ -667,7 +713,20 @@ userInput.addEventListener('keydown', (e) => {
 // Welcome / initial AI message on page load
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
-  const welcome = `Welcome! 👋 I'm your AI Farming Assistant powered by Ollama.
+  const lastScanDisease = sessionStorage.getItem('lastScanDisease');
+  const lastScanAI = sessionStorage.getItem('lastScanAI');
+
+  if (lastScanDisease && lastScanAI) {
+    sessionStorage.removeItem('lastScanDisease');
+    sessionStorage.removeItem('lastScanAI');
+
+    currentChatContext = `Context: A leaf was scanned and diagnosed with ${lastScanDisease}. Recommended advice was: ${lastScanAI}.`;
+
+    const continuedContext = `**Recent Scan Results:**\n\n**Disease:** ${lastScanDisease}\n\n**Advice:**\n${lastScanAI}\n\nHow I can help you more?`;
+
+    appendMessage('ai', continuedContext);
+  } else {
+    const welcome = `Welcome! 👋 I'm your AI Farming Assistant powered by Ollama.
 
 Upload a leaf photo above to receive:
 
@@ -678,8 +737,19 @@ Upload a leaf photo above to receive:
 
 You can also type any question about crops, pests, or soil health below.`;
 
-  appendMessage('ai', welcome);
+    appendMessage('ai', welcome);
+  }
 });
+</script>
+<script>
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
 </script>
 
 </body>

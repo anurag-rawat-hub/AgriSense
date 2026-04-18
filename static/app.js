@@ -8,6 +8,8 @@ const resultsDiv = document.getElementById("results");
 const diseaseEl = document.getElementById("disease");
 const confidenceEl = document.getElementById("confidence");
 const aiEl = document.getElementById("ai");
+const cropEl = document.getElementById("crop");
+const cropSelect = document.getElementById("crop-select");
 
 const container = document.getElementById("canvas-container");
 
@@ -99,11 +101,11 @@ const snapBtn = document.getElementById("snap-btn");
 const cameraCanvas = document.getElementById("camera-canvas");
 
 let stream = null;
+let currentFacingMode = "environment"; // Start with rear camera on mobile
 
 cameraBtn.onclick = async () => {
   if (cameraContainer.style.display === "none" || !cameraContainer.style.display) {
     
-    // Check hardware & context security api support
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         alert("Camera feature is not supported in this browser or environment. Make sure you are using 'localhost' or '127.0.0.1' over HTTP, or an HTTPS connection.");
         statusText.innerText = "❌ Security policy blocked camera access.";
@@ -111,7 +113,7 @@ cameraBtn.onclick = async () => {
     }
 
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } });
       cameraFeed.srcObject = stream;
       cameraContainer.style.display = "block";
       statusText.innerText = "📷 Camera active. Ready to capture...";
@@ -123,14 +125,22 @@ cameraBtn.onclick = async () => {
       statusText.innerText = `❌ Error: ${err.name} - ${err.message}`;
     }
   } else {
-    // stop camera
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
+    if (stream) stream.getTracks().forEach(track => track.stop());
     cameraContainer.style.display = "none";
     statusText.innerText = "Awaiting image upload for analysis...";
   }
 };
+
+async function flipCamera() {
+  currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+  if (stream) stream.getTracks().forEach(track => track.stop());
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } });
+    cameraFeed.srcObject = stream;
+  } catch (err) {
+    statusText.innerText = `❌ Flip failed: ${err.message}`;
+  }
+}
 
 snapBtn.onclick = () => {
   if (!stream) return;
@@ -192,23 +202,37 @@ fileInput.onchange = async () => {
 // ---------- API SUBMISSION ----------
 async function submitImage(formData) {
   try {
-    const res = await fetch("/predict/", {
+    const selectedCrop = cropSelect ? cropSelect.value : "potato";
+    formData.append("crop", selectedCrop);
+    
+    // Send to Django backend which handles local vs DL container routing automatically
+    const mlEndpoint = `/predict/`;
+
+    const res = await fetch(mlEndpoint, {
       method: "POST",
       body: formData
     });
 
+    if (!res.ok) {
+      throw new Error(`ML Endpoint returned status: ${res.status}`);
+    }
+
     const data = await res.json();
+    
+    // Handling generic JSON return block
+    const diseaseText = data.disease || "Unknown";
+    const cropText = data.crop || "Unknown";
+    const confVal = data.confidence || 0.0;
 
     overlay.style.display = "none";
-    diseaseEl.innerText = data.disease || "Unknown";
-    confidenceEl.innerText = data.confidence
-      ? (data.confidence * 100).toFixed(2) + "%"
-      : "N/A";
+    if (cropEl) cropEl.innerText = cropText;
+    diseaseEl.innerText = diseaseText;
+    confidenceEl.innerText = confVal ? (confVal * 100).toFixed(2) + "%" : "N/A";
 
-    aiEl.innerText = data.ai || "No recommendation";
+    aiEl.innerText = "🤖 Getting AI advice...";
 
     resultsDiv.style.display = "block";
-    statusText.innerText = "✅ Analysis complete";
+    statusText.innerText = "✅ Analysis complete. AI is typing...";
 
     // 🔥 visual feedback
     if (data.disease && data.disease.toLowerCase().includes("blight")) {
@@ -216,6 +240,25 @@ async function submitImage(formData) {
     } else {
       img.style.filter = "none";
     }
+
+    // Async call to AI
+    fetch("/ask-ai/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ crop: cropText, disease: diseaseText })
+    }).then(r => r.json()).then(aiData => {
+        aiEl.innerText = aiData.answer || "No recommendation available.";
+        statusText.innerText = "✅ AI Analysis complete";
+        
+        // Save context AFTER AI finishes so ai.html has it fully
+        sessionStorage.setItem('lastScanDisease', diseaseText);
+        sessionStorage.setItem('lastScanAI', aiData.answer || "No recommendation");
+    }).catch(e => {
+        aiEl.innerText = "⚠️ Failed to reach AI backend.";
+        statusText.innerText = "✅ Analysis complete";
+        sessionStorage.setItem('lastScanDisease', diseaseText);
+        sessionStorage.setItem('lastScanAI', "Failed to reach AI.");
+    });
 
   } catch (err) {
     console.error(err);
