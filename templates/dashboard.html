@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CropAI – Smart Farm Dashboard</title>
+  <meta name="description" content="Real-time IoT sensor dashboard for temperature, humidity, air quality and soil moisture monitoring.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css?v=7">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 200;
+      background: #fff;
+      border: 1px solid #cce5cc;
+      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(39,174,96,0.15);
+    }
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 99;
+    }
+    @media (max-width: 768px) {
+      .sidebar-toggle { display: flex; }
+      .sidebar {
+        position: fixed !important;
+        left: -260px;
+        top: 0;
+        height: 100%;
+        z-index: 150;
+        transition: left 0.28s ease;
+      }
+      .sidebar.open { left: 0 !important; }
+      .sidebar-overlay.open { display: block; }
+      .main-content { padding-left: 0 !important; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<div class="app-container">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="logo">
+      <svg width="24" height="24" viewBox="0 0 200 260" fill="none"><path d="M100 10 C160 30,190 80,180 130 C170 180,130 220,100 250 C70 220,30 180,20 130 C10 80,40 30,100 10Z" fill="#27ae60"/><path d="M100 10 L100 250" stroke="#1e8449" stroke-width="6"/><path d="M100 80 C128 90,148 112,150 134" stroke="#1e8449" stroke-width="3" fill="none"/></svg>
+      <span>Crop AI</span>
+    </div>
+    <ul>
+      <li><a href="/index/"> Scanner</a></li>
+      <li class="active"> Dashboard</li>
+      <li><a href="/ai/"> AI Assistant</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main -->
+  <main class="main-content">
+    <div class="header-title">
+      <h1>Smart Farm Dashboard</h1>
+      <h2>Real-time IoT sensor monitoring &amp; health metrics</h2>
+    </div>
+
+    <!-- 4 Stat Cards -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:26px;">
+      <div class="card" style="text-align:center;padding:22px 16px;">
+        <p style="color:var(--text-muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;font-weight:600;">🌡 Temperature</p>
+        <h2 id="current-temp" style="margin:0;font-size:2rem;color:#27ae60;font-weight:700;">--°C</h2>
+      </div>
+      <div class="card" style="text-align:center;padding:22px 16px;">
+        <p style="color:var(--text-muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;font-weight:600;">💧 Humidity</p>
+        <h2 id="current-humid" style="margin:0;font-size:2rem;color:#2980b9;font-weight:700;">--%</h2>
+      </div>
+      <div class="card" style="text-align:center;padding:22px 16px;">
+        <p style="color:var(--text-muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;font-weight:600;">🌫 Air Quality</p>
+        <h2 id="current-gas" style="margin:0;font-size:2rem;color:#e67e22;font-weight:700;">--</h2>
+      </div>
+      <div class="card" style="text-align:center;padding:22px 16px;">
+        <p style="color:var(--text-muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;font-weight:600;">🌱 Soil Moisture</p>
+        <h2 id="current-moisture" style="margin:0;font-size:2rem;color:#8e44ad;font-weight:700;">--</h2>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid">
+      <div class="card">
+        <h3 style="margin:0 0 16px;color:var(--text-main);font-size:1.1rem;font-weight:600;display:flex;align-items:center;gap:8px;">🌡 Temperature Trends</h3>
+        <canvas id="tempChart" style="background:var(--bg-soft);border-radius:10px;"></canvas>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 16px;color:var(--text-main);font-size:1.1rem;font-weight:600;display:flex;align-items:center;gap:8px;">💧 Humidity Tracking</h3>
+        <canvas id="humidityChart" style="background:var(--bg-soft);border-radius:10px;"></canvas>
+      </div>
+    </div>
+
+    <!-- AI Advice Box -->
+    <div class="card" style="margin-top:24px;border:1.5px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="margin:0;color:var(--accent-dark);display:flex;align-items:center;gap:10px;font-size:1.1rem;">
+           AI Disease Assistant
+          <span id="ai-status" style="font-size:0.82rem;color:var(--text-muted);font-weight:400;"></span>
+        </h3>
+        <button onclick="requestManualAIAdvice()" style="background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff;border:none;padding:10px 22px;border-radius:var(--radius-sm);font-weight:600;cursor:pointer;transition:all 0.25s;font-family:'Inter',sans-serif;font-size:0.9rem;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(46,204,113,0.28)'" onmouseout="this.style.transform='';this.style.boxShadow=''">Ask AI for Advice</button>
+      </div>
+      <p id="ai-advice" style="color:var(--text-muted);line-height:1.7;white-space:pre-line;font-size:0.97rem;margin:0;padding:14px;background:var(--bg-soft);border-radius:var(--radius-sm);border:1px solid var(--border-soft);">Click 'Ask AI for Advice' to analyze current sensor metrics.</p>
+    </div>
+  </main>
+</div>
+
+<script>
+async function fetchAIAdvice(latestData) {
+    const aiStatus = document.getElementById('ai-status');
+    const aiAdvice = document.getElementById('ai-advice');
+
+    aiStatus.innerText = "(Analyzing with Ollama...)";
+    aiStatus.style.color = "#e67e22";
+    aiAdvice.innerText = "Processing sensor data...";
+
+    const promptText = `I am a farmer. My farm sensors read: Temperature: ${latestData.temperature}°C, Humidity: ${latestData.humidity}%, Gas (MQ135): ${latestData.gas}, and Soil Moisture: ${latestData.moisture}. Give brief, structured advice on potential crop disease risks based on this, and suggest immediate actions if necessary.`;
+
+    try {
+        const res = await fetch("/ask-ai/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: promptText })
+        });
+        const data = await res.json();
+        aiStatus.innerText = "(Analysis Complete ✓)";
+        aiStatus.style.color = "#27ae60";
+
+        if (data.answer && data.answer !== "AI not available" && data.answer !== "No response") {
+            aiAdvice.innerText = data.answer;
+        } else {
+            aiAdvice.innerText = "Error: Local Ollama instance is not responding or not available.";
+            aiStatus.style.color = "#e74c3c";
+        }
+    } catch (e) {
+        aiStatus.innerText = "(Error)";
+        aiStatus.style.color = "#e74c3c";
+        aiAdvice.innerText = "Failed to communicate with AI API.";
+    }
+}
+
+function requestManualAIAdvice() {
+    const temp  = document.getElementById('current-temp').innerText.replace('°C', '');
+    const hum   = document.getElementById('current-humid').innerText.replace('%', '');
+    const gas   = document.getElementById('current-gas').innerText;
+    const moist = document.getElementById('current-moisture').innerText;
+    fetchAIAdvice({ temperature: temp, humidity: hum, gas, moisture: moist });
+}
+
+let tempChartInstance = null;
+let humidityChartInstance = null;
+
+async function loadData() {
+    try {
+        const res = await fetch("/get-sensor-data/");
+        const data = await res.json();
+
+        if (data.length > 0) {
+            const latest = data[0];
+            document.getElementById('current-temp').innerText    = (latest.temperature || '--') + "°C";
+            document.getElementById('current-humid').innerText   = (latest.humidity || '--') + "%";
+            document.getElementById('current-gas').innerText     = (latest.gas || '--');
+            document.getElementById('current-moisture').innerText = (latest.moisture || '--');
+        }
+
+        const reversed    = [...data].reverse();
+        const times       = reversed.map(d => d.time);
+        const temps       = reversed.map(d => d.temperature);
+        const humidities  = reversed.map(d => d.humidity || (d.moisture || 0));
+
+        // Light-theme chart defaults
+        Chart.defaults.color       = '#5a7a5a';
+        Chart.defaults.borderColor = '#e0ede0';
+
+        const chartOpts = {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: 'rgba(46,204,113,0.08)' }, ticks: { color: '#8aab8a' } },
+                y: { beginAtZero: false, grid: { color: 'rgba(46,204,113,0.08)' }, ticks: { color: '#8aab8a' } }
+            }
+        };
+
+        if (tempChartInstance) {
+            tempChartInstance.data.labels = times;
+            tempChartInstance.data.datasets[0].data = temps;
+            tempChartInstance.update();
+        } else {
+            tempChartInstance = new Chart(document.getElementById("tempChart"), {
+                type: 'line',
+                data: {
+                    labels: times,
+                    datasets: [{ label: "Temperature (°C)", data: temps,
+                        borderColor: '#27ae60', backgroundColor: 'rgba(46,204,113,0.10)',
+                        borderWidth: 2, tension: 0.4, fill: true,
+                        pointBackgroundColor: '#27ae60', pointBorderColor: '#fff',
+                        pointBorderWidth: 2, pointRadius: 4 }]
+                },
+                options: { ...chartOpts, scales: { ...chartOpts.scales, y: { ...chartOpts.scales.y, beginAtZero: false } } }
+            });
+        }
+
+        if (humidityChartInstance) {
+            humidityChartInstance.data.labels = times;
+            humidityChartInstance.data.datasets[0].data = humidities;
+            humidityChartInstance.update();
+        } else {
+            humidityChartInstance = new Chart(document.getElementById("humidityChart"), {
+                type: 'line',
+                data: {
+                    labels: times,
+                    datasets: [{ label: "Humidity Level", data: humidities,
+                        borderColor: '#2980b9', backgroundColor: 'rgba(41,128,185,0.10)',
+                        borderWidth: 2, tension: 0.4, fill: true,
+                        pointBackgroundColor: '#2980b9', pointBorderColor: '#fff',
+                        pointBorderWidth: 2, pointRadius: 4 }]
+                },
+                options: { ...chartOpts, scales: { ...chartOpts.scales, y: { ...chartOpts.scales.y, beginAtZero: true } } }
+            });
+        }
+
+    } catch (error) {
+        console.error("Error loading dashboard data:", error);
+    }
+}
+
+loadData();
+setInterval(loadData, 2000);
+</script>
+
+<script>
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+</script>
+</body>
+</html>

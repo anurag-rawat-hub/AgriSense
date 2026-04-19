@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CropAI – Leaf Scanner</title>
+  <meta name="description" content="Upload a leaf image for instant AI-powered disease diagnosis.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css?v=7">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    /* ---- Sidebar toggle ---- */
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 200;
+      background: #fff;
+      border: 1px solid #cce5cc;
+      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(39,174,96,0.15);
+    }
+    .sidebar-toggle svg { display: block; }
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 99;
+    }
+    @media (max-width: 768px) {
+      .sidebar-toggle { display: flex; }
+      .sidebar {
+        position: fixed !important;
+        left: -260px;
+        top: 0;
+        height: 100%;
+        z-index: 150;
+        transition: left 0.28s ease;
+      }
+      .sidebar.open { left: 0 !important; }
+      .sidebar-overlay.open { display: block; }
+      .main-content { padding-left: 0 !important; margin-left: 0 !important; }
+    }
+    /* ---- Flip camera btn ---- */
+    #flip-btn {
+      margin-top: 10px;
+      width: 100%;
+      padding: 9px;
+      background: var(--bg-soft);
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+      color: var(--accent-dark);
+      font-weight: 600;
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    #flip-btn:hover { background: var(--accent-pale); }
+  </style>
+</head>
+
+<body>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<div class="app-container">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="logo">
+      <svg width="24" height="24" viewBox="0 0 200 260" fill="none"><path d="M100 10 C160 30,190 80,180 130 C170 180,130 220,100 250 C70 220,30 180,20 130 C10 80,40 30,100 10Z" fill="#27ae60"/><path d="M100 10 L100 250" stroke="#1e8449" stroke-width="6"/><path d="M100 80 C128 90,148 112,150 134" stroke="#1e8449" stroke-width="3" fill="none"/></svg>
+      <span>Crop AI</span>
+    </div>
+    <ul>
+      <li class="active"> Scanner</li>
+      <li><a href="/dashboard/"> Dashboard</a></li>
+      <li><a href="/ai/"> AI Assistant</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main -->
+  <main class="main-content">
+    <div class="header-title" style="display:flex;flex-direction:column;align-items:center;text-align:center;width:100%;">
+      <h1 style="font-size:3rem;font-weight:700;background:linear-gradient(135deg,#27ae60,#56cc8a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:0;letter-spacing:-1px;">Smart Leaf Diagnosis</h1>
+      <h2 style="color:var(--text-muted);font-size:1.15rem;font-weight:400;margin-top:12px;">Deep learning disease detection · Upload or capture</h2>
+    </div>
+
+    <div class="grid">
+      <!-- 3D Canvas -->
+      <div class="card" style="position:relative;">
+        <div id="canvas-container"></div>
+        <div style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.85);border:1px solid var(--border-soft);border-radius:20px;padding:5px 14px;font-size:0.78rem;font-weight:600;color:var(--accent-dark);backdrop-filter:blur(6px);">🌿 3D Leaf Preview</div>
+      </div>
+
+      <!-- Controls -->
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
+          <svg width="28" height="28" viewBox="0 0 200 260" fill="none"><path d="M100 10 C160 30,190 80,180 130 C170 180,130 220,100 250 C70 220,30 180,20 130 C10 80,40 30,100 10Z" fill="#27ae60"/><path d="M100 10 L100 250" stroke="#1e8449" stroke-width="6"/><path d="M100 80 C128 90,148 112,150 134" stroke="#1e8449" stroke-width="3" fill="none"/></svg>
+          <h2 style="margin:0;color:var(--text-main);font-size:1.4rem;font-weight:600;">Disease Analysis</h2>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label for="crop-select" style="font-weight: 600; color: var(--text-main); font-size: 0.9rem;">Select Crop Type:</label>
+          <select id="crop-select" style="width: 100%; padding: 10px; margin-top: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-soft); color: var(--text-main); font-size: 1rem; outline: none;">
+            <option value="potato">Potato</option>
+            <option value="tomato">Tomato</option>
+            <option value="pepper">Bell Pepper</option>
+          </select>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-bottom:6px;">
+          <button id="upload-btn" class="primary-btn" style="flex:1;margin-bottom:0;"> Upload Image</button>
+          <button id="camera-btn" class="premium-btn" style="flex:1;margin-bottom:0;"> Live Photo</button>
+        </div>
+
+        <div id="camera-container" style="display:none;margin-top:16px;margin-bottom:16px;text-align:center;background:var(--bg-soft);padding:12px;border-radius:12px;border:1px solid var(--border-soft);">
+          <video id="camera-feed" autoplay playsinline style="width:100%;border-radius:10px;"></video>
+          <button id="flip-btn" onclick="flipCamera()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+            Flip Camera
+          </button>
+          <button id="snap-btn" class="primary-btn" style="margin-top:10px;width:100%;"> Snap Photo</button>
+          <canvas id="camera-canvas" style="display:none;"></canvas>
+        </div>
+
+        <input type="file" id="file-input" hidden>
+        <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+
+        <p id="status" style="color:var(--text-muted);margin-top:16px;margin-bottom:18px;font-style:italic;font-size:0.95rem;">Awaiting image upload for analysis...</p>
+
+        <!-- Results -->
+        <div id="results" style="display:none;">
+          <div style="background:var(--bg-soft);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;">
+            <p style="margin:0 0 6px;font-size:0.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Crop Type</p>
+            <h3 style="margin:0;color:var(--text-main);font-size:1.25rem;font-weight:700;" id="crop"></h3>
+          </div>
+          <div style="background:var(--bg-soft);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;">
+            <p style="margin:0 0 6px;font-size:0.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Detected Disease</p>
+            <h3 style="margin:0;color:var(--text-main);font-size:1.25rem;font-weight:700;" id="disease"></h3>
+          </div>
+          <div style="background:var(--accent-pale);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:14px;">
+            <p style="margin:0;font-size:0.9rem;color:var(--accent-dark);font-weight:600;">Confidence: <span id="confidence" style="color:var(--text-main);font-weight:700;"></span></p>
+          </div>
+          <p style="color:var(--text-main);font-weight:600;margin-bottom:8px;font-size:0.9rem;border-bottom:1px solid var(--border-soft);padding-bottom:6px;">AI Advice</p>
+          <pre id="ai" style="white-space:pre-wrap;font-family:inherit;"></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="action-buttons">
+      <a href="/ai/" style="text-decoration:none;">
+        <button class="primary-btn"> Ask AI Assistant</button>
+      </a>
+      <a href="/dashboard/" style="text-decoration:none;">
+        <button class="premium-btn" style="width:auto;padding:14px 32px;border-radius:12px;margin-bottom:0;font-weight:600;"> View Dashboard</button>
+      </a>
+    </div>
+  </main>
+</div>
+
+<script src="/static/app.js?v=10"></script>
+<script>
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+</script>
+</body>
+</html>
