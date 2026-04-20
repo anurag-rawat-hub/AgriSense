@@ -40,12 +40,12 @@ Sends recommendations in regional languages for better accessibility.
 
 <p align="center">
   <img width="1000"  alt="Screenshot 2026-04-17 184801" src="https://github.com/user-attachments/assets/02b6e998-f9b6-4b2a-95d5-f5ca0a4c432d">
-  <img width="300"  alt="Screenshot 2026-04-17 184154" src="https://github.com/user-attachments/assets/39c59337-2412-422b-ae71-7afd651a284b" />
-
 </p>
 
 <p align="center">
  <img width="1907" height="866" alt="Screenshot 2026-04-17 184640" src="https://github.com/user-attachments/assets/8bf8c7c0-4d25-4222-be9c-e13734bbdde7" />
+ <img width="300"  alt="Screenshot 2026-04-17 184154" src="https://github.com/user-attachments/assets/39c59337-2412-422b-ae71-7afd651a284b" />
+
 
   <img width="300" alt="WhatsApp Image 2026-04-17 at 7 03 25 PM" src="https://github.com/user-attachments/assets/dc70b232-6405-47b0-a488-21b1db85b659" />
   <img width="300"  alt="WhatsApp Image 2026-04-17 at 7 03 25 PM (1)" src="https://github.com/user-attachments/assets/2ff22861-31c7-489d-b830-6a1de26ec9a3" />
@@ -62,7 +62,11 @@ Sends recommendations in regional languages for better accessibility.
 <b>Integration:</b> WhatsApp API
 
 <br><br>
+<h2>🛠️Circuit Diagram</h2><br>
+<img width="2816" height="1536" alt="Gemini_Generated_Image_3gbg043gbg043gbg" src="https://github.com/user-attachments/assets/36885d96-175d-429c-9f93-a5cd17f204fd" />
 
+
+<br><br>
 <h2>⚙️ Workflow</h2>
 
 User uploads leaf image → CNN Model detects disease → Backend processes data → AI Agent generates recommendations → IoT data is integrated → Final output sent via WhatsApp
