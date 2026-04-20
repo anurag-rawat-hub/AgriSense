@@ -43,9 +43,10 @@ Sends recommendations in regional languages for better accessibility.
 </p>
 
 <p align="center">
- <img width="1907" height="866" alt="Screenshot 2026-04-17 184640" src="https://github.com/user-attachments/assets/8bf8c7c0-4d25-4222-be9c-e13734bbdde7" />
- <img width="300"  alt="Screenshot 2026-04-17 184154" src="https://github.com/user-attachments/assets/39c59337-2412-422b-ae71-7afd651a284b" />
+  <img width="300"  alt="Screenshot 2026-04-17 184154" src="https://github.com/user-attachments/assets/39c59337-2412-422b-ae71-7afd651a284b" />
 
+ <img width="1907" height="866" alt="Screenshot 2026-04-17 184640" src="https://github.com/user-attachments/assets/8bf8c7c0-4d25-4222-be9c-e13734bbdde7" />
+ 
 
   <img width="300" alt="WhatsApp Image 2026-04-17 at 7 03 25 PM" src="https://github.com/user-attachments/assets/dc70b232-6405-47b0-a488-21b1db85b659" />
   <img width="300"  alt="WhatsApp Image 2026-04-17 at 7 03 25 PM (1)" src="https://github.com/user-attachments/assets/2ff22861-31c7-489d-b830-6a1de26ec9a3" />
